@@ -1,0 +1,14 @@
+[
+  { "label": "Do it.",                          "file": "audio/do-it.mp3" },
+  { "label": "Unlimited power!",                "file": "audio/unlimited-power.mp3" },
+  { "label": "Everything is proceeding as I have foreseen.", "file": "audio/as-i-have-foreseen.mp3" },
+  { "label": "Good... good.",                   "file": "audio/good-good.mp3" },
+  { "label": "I can feel your anger.",          "file": "audio/feel-your-anger.mp3" },
+  { "label": "It's treason, then.",             "file": "audio/treason-then.mp3" },
+  { "label": "Wipe them out. All of them.",     "file": "audio/wipe-them-out.mp3" },
+  { "label": "Ironic — he could save others from death, but not himself.", "file": "audio/ironic.mp3" },
+  { "label": "Are you threatening me, Master Jedi?", "file": "audio/threatening-me.mp3" },
+  { "label": "The dark side is a pathway to many abilities some consider unnatural.", "file": "audio/dark-side-pathway.mp3" },
+  { "label": "Now, young Skywalker, you will die.", "file": "audio/you-will-die.mp3" },
+  { "label": "So this is how liberty dies — with thunderous applause.", "file": "audio/liberty-dies.mp3" }
+]
