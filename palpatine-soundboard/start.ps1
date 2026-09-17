@@ -78,19 +78,30 @@ if (-not $ts) {
   exit 1
 }
 
-# Try newest syntax, then the older explicit form, then plain HTTP (no cert needed).
+& $ts version 2>&1 | Select-Object -First 1 | ForEach-Object { Write-Host "tailscale $_" }
+& $ts serve reset 2>&1 | Out-Null   # clear any half-applied config from a previous run
+
+# Explicit --https / --http flags first (current CLI), then the bare-target and
+# legacy forms for older builds. Plain HTTP needs no tailnet HTTPS certificate.
 $attempts = @(
-  @{ desc = 'https (new syntax)'; args = @('serve','--bg','http://127.0.0.1:' + $Port); scheme = 'https'; port = 443 },
-  @{ desc = 'https (old syntax)'; args = @('serve','https:443','/','http://127.0.0.1:' + $Port); scheme = 'https'; port = 443 },
-  @{ desc = 'http (no cert)';     args = @('serve','--bg','--http=' + $Port,'http://127.0.0.1:' + $Port); scheme = 'http'; port = $Port }
+  @{ desc = 'https=443 + url';  args = @('serve','--bg','--https=443','http://127.0.0.1:' + $Port); scheme = 'https'; port = 443 },
+  @{ desc = 'https=443 + port'; args = @('serve','--bg','--https=443',"$Port");                     scheme = 'https'; port = 443 },
+  @{ desc = 'bare target';      args = @('serve','--bg','http://127.0.0.1:' + $Port);               scheme = 'https'; port = 443 },
+  @{ desc = "http=$Port + url"; args = @('serve','--bg',"--http=$Port",'http://127.0.0.1:' + $Port); scheme = 'http'; port = $Port },
+  @{ desc = "http=$Port + port";args = @('serve','--bg',"--http=$Port","$Port");                     scheme = 'http'; port = $Port },
+  @{ desc = 'legacy https:443'; args = @('serve','https:443','/','http://127.0.0.1:' + $Port);       scheme = 'https'; port = 443 }
 )
 
 $served = $null
 foreach ($a in $attempts) {
   $cliArgs = $a.args
-  $out = & $ts @cliArgs 2>&1
-  if ($LASTEXITCODE -eq 0) { $served = $a; Write-Host "tailscale serve: $($a.desc)"; break }
-  Write-Host "tailscale serve $($a.desc) failed: $out" -ForegroundColor DarkGray
+  # Render native stderr as plain text; ErrorRecords otherwise stringify into noise.
+  $lines = @(& $ts @cliArgs 2>&1 | ForEach-Object { $_.ToString() })
+  if ($LASTEXITCODE -eq 0) { $served = $a; Write-Host "tailscale serve: $($a.desc)" -ForegroundColor Green; break }
+  # Show only the real error, not the CLI's full usage dump.
+  $why = ($lines | Where-Object { $_ -match '^\s*Error' } | Select-Object -First 1)
+  if (-not $why) { $why = ($lines | Where-Object { $_.Trim() } | Select-Object -First 1) }
+  Write-Host ("  x {0,-18} {1}" -f $a.desc, $why) -ForegroundColor DarkGray
 }
 
 if (-not $served) {
